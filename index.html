@@ -59,7 +59,9 @@
         </div>
 
         <!-- Hidden audio element -->
-        <audio id="audio" preload="metadata" crossOrigin="anonymous"></audio>
+        <audio id="audio" preload="metadata"></audio>
+
+        <div id="audioStatus" class="audio-status hidden" role="status"></div>
 
         <!-- Progress / Scrubber -->
         <div class="scrubber-row">
@@ -220,6 +222,7 @@
       </div>
     </div>
 
+    <script src="audio-config.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

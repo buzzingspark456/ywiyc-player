@@ -1,6 +1,22 @@
 /* ═══════════════════════════════════════════════════════
    TRACK LIST
 ═══════════════════════════════════════════════════════ */
+const AUDIO_BASE_URL = (window.YWIYC_AUDIO_BASE_URL || "").trim();
+
+function buildAudioPath(file) {
+  const encodedFile = encodeURIComponent(file);
+  if (!AUDIO_BASE_URL) return `audio/${encodedFile}`;
+  return `${AUDIO_BASE_URL.replace(/\/$/, "")}/${encodedFile}`;
+}
+
+function isSameOriginUrl(url) {
+  try {
+    return new URL(url, window.location.href).origin === window.location.origin;
+  } catch {
+    return true;
+  }
+}
+
 const lessons = [
   { number: 1,  file: "Your Wish Is Your Command Disk 1.mp3" },
   { number: 2,  file: "Your Wish Is Your Command Disk 2.mp3" },
@@ -19,7 +35,7 @@ const lessons = [
 ].map(l => ({
   ...l,
   title: `Lesson ${l.number}`,
-  path:  `audio/${encodeURIComponent(l.file)}`,
+  path:  buildAudioPath(l.file),
 }));
 
 /* ═══════════════════════════════════════════════════════
@@ -30,6 +46,7 @@ const audio          = document.getElementById("audio");
 // Player UI
 const currentTitle   = document.getElementById("currentTitle");
 const currentFile    = document.getElementById("currentFile");
+const audioStatus    = document.getElementById("audioStatus");
 const artworkFrame   = document.getElementById("artworkFrame");
 const playingRing    = document.getElementById("playingRing");
 
@@ -110,6 +127,26 @@ function setThumbPos(trackEl, percent) {
   trackEl.style.setProperty("--thumb-pos", `${Math.min(Math.max(percent, 0), 100)}%`);
 }
 
+function storageKey(name, lessonNumber = lessons[currentIndex].number) {
+  return `ywiYC.${name}.${lessonNumber}`;
+}
+
+function saveCurrentPosition() {
+  if (!lessons[currentIndex] || !isFinite(audio.currentTime)) return;
+  const num = lessons[currentIndex].number;
+  localStorage.setItem(storageKey("time", num), String(Math.floor(audio.currentTime)));
+  if (isFinite(audio.duration) && audio.duration > 0) {
+    localStorage.setItem(storageKey("duration", num), String(Math.floor(audio.duration)));
+  }
+  localStorage.setItem("ywiYC.currentIndex", String(currentIndex));
+}
+
+function showAudioStatus(message, isError = false) {
+  audioStatus.textContent = message;
+  audioStatus.classList.toggle("hidden", !message);
+  audioStatus.classList.toggle("audio-status--error", isError);
+}
+
 /* ═══════════════════════════════════════════════════════
    VOLUME
 ═══════════════════════════════════════════════════════ */
@@ -141,6 +178,7 @@ function syncToggles() {
 ═══════════════════════════════════════════════════════ */
 function initAudioCtx() {
   if (audioCtx) return;
+  if (!isSameOriginUrl(audio.currentSrc || audio.src)) return;
   try {
     audioCtx  = new (window.AudioContext || window.webkitAudioContext)();
     analyser  = audioCtx.createAnalyser();
@@ -246,6 +284,7 @@ function syncPlayState() {
    LOAD A TRACK
 ═══════════════════════════════════════════════════════ */
 function setLesson(index, autoplay = false) {
+  saveCurrentPosition();
   currentIndex = ((index % lessons.length) + lessons.length) % lessons.length;
   const lesson = lessons[currentIndex];
 
@@ -253,6 +292,7 @@ function setLesson(index, autoplay = false) {
   currentTitle.textContent = lesson.title;
   currentFile.textContent  = lesson.file;
   localStorage.setItem("ywiYC.currentIndex", String(currentIndex));
+  showAudioStatus("");
 
   // Reset scrubber
   progressBar.value = 0;
@@ -265,7 +305,10 @@ function setLesson(index, autoplay = false) {
 
   if (autoplay) {
     if (audioCtx?.state === "suspended") audioCtx.resume();
-    audio.play().catch(err => console.warn("Playback blocked:", err));
+    audio.play().catch(err => {
+      console.warn("Playback blocked:", err);
+      showAudioStatus("Tap Play again. Your browser blocked autoplay until you interact with the page.", true);
+    });
   }
 }
 
@@ -275,13 +318,17 @@ function setLesson(index, autoplay = false) {
 function togglePlay() {
   if (audio.paused) {
     if (audioCtx?.state === "suspended") audioCtx.resume();
-    audio.play().catch(e => console.warn(e));
+    audio.play().catch(e => {
+      console.warn(e);
+      showAudioStatus("Audio could not start. Check that the MP3 files are online and reachable.", true);
+    });
   } else {
     audio.pause();
   }
 }
 
 function playNext() {
+  saveCurrentPosition();
   if (isShuffle) {
     let idx;
     do { idx = Math.floor(Math.random() * lessons.length); }
@@ -293,6 +340,7 @@ function playNext() {
 }
 
 function playPrev() {
+  saveCurrentPosition();
   // If more than 4s in, restart; otherwise go to previous
   if (audio.currentTime > 4) {
     audio.currentTime = 0;
@@ -303,6 +351,7 @@ function playPrev() {
 
 function skip(secs) {
   audio.currentTime = Math.max(0, Math.min(audio.duration || 0, audio.currentTime + secs));
+  saveCurrentPosition();
 }
 
 function toggleMute() {
@@ -360,8 +409,8 @@ function renderList() {
     const realIdx   = lessons.indexOf(lesson);
     const isCurrent = realIdx === currentIndex;
 
-    const savedTime     = Number(localStorage.getItem(`ywiYC.time.${lesson.number}`)     || 0);
-    const savedDuration = Number(localStorage.getItem(`ywiYC.duration.${lesson.number}`) || 0);
+    const savedTime     = Number(localStorage.getItem(storageKey("time", lesson.number))     || 0);
+    const savedDuration = Number(localStorage.getItem(storageKey("duration", lesson.number)) || 0);
 
     let progPct    = 0;
     let isDone     = false;
@@ -379,6 +428,10 @@ function renderList() {
          </span>`
       : "";
 
+    const resumeBadge = !isDone && savedTime > 3
+      ? `<span class="resume-badge">Saved ${fmt(savedTime)}</span>`
+      : "";
+
     const btn = document.createElement("button");
     btn.type      = "button";
     btn.className = `lesson${isCurrent ? " active" : ""}`;
@@ -390,6 +443,7 @@ function renderList() {
       <span class="lesson-meta">
         <span class="lesson-meta__title">${highlight(lesson.title, query)}</span>
         <span class="lesson-meta__file">${highlight(lesson.file, query)}</span>
+        ${resumeBadge}
       </span>
       ${doneBadge}
       <div class="lesson-progress-bar"></div>
@@ -461,6 +515,8 @@ progressBar.addEventListener("input", () => {
 progressBar.addEventListener("change", () => {
   if (audio.duration) {
     audio.currentTime = (Number(progressBar.value) / 100) * audio.duration;
+    saveCurrentPosition();
+    renderList();
   }
 });
 
@@ -499,12 +555,13 @@ audio.addEventListener("play",  syncPlayState);
 audio.addEventListener("pause", syncPlayState);
 
 audio.addEventListener("loadedmetadata", () => {
+  showAudioStatus("");
   timeDuration.textContent = fmt(audio.duration);
   const num = lessons[currentIndex].number;
-  localStorage.setItem(`ywiYC.duration.${num}`, String(Math.floor(audio.duration)));
+  localStorage.setItem(storageKey("duration", num), String(Math.floor(audio.duration)));
 
   // Restore saved position — resume exactly where left off
-  const saved = Number(localStorage.getItem(`ywiYC.time.${num}`) || 0);
+  const saved = Number(localStorage.getItem(storageKey("time", num)) || 0);
   if (saved > 3 && saved < audio.duration - 5) {
     audio.currentTime = saved;
     // Show resume hint briefly
@@ -525,8 +582,7 @@ audio.addEventListener("timeupdate", () => {
   const now = Date.now();
   if (now - _lastSaveTime > 1000) {
     _lastSaveTime = now;
-    const num = lessons[currentIndex].number;
-    localStorage.setItem(`ywiYC.time.${num}`, String(Math.floor(audio.currentTime)));
+    saveCurrentPosition();
   }
 
   // Live update active card progress bar without full re-render
@@ -541,16 +597,12 @@ audio.addEventListener("timeupdate", () => {
 
 // Always save on pause/unload so position is never lost
 audio.addEventListener("pause", () => {
-  const num = lessons[currentIndex].number;
-  localStorage.setItem(`ywiYC.time.${num}`, String(Math.floor(audio.currentTime)));
+  saveCurrentPosition();
+  renderList();
 });
 
 window.addEventListener("beforeunload", () => {
-  if (!audio.paused && audio.currentTime > 0) {
-    const num = lessons[currentIndex].number;
-    localStorage.setItem(`ywiYC.time.${num}`, String(Math.floor(audio.currentTime)));
-    localStorage.setItem("ywiYC.currentIndex", String(currentIndex));
-  }
+  saveCurrentPosition();
 });
 
 audio.addEventListener("ended", () => {
@@ -565,6 +617,8 @@ audio.addEventListener("ended", () => {
 audio.addEventListener("error", e => {
   console.error("Audio error:", e);
   timeDuration.textContent = "Error";
+  const lesson = lessons[currentIndex];
+  showAudioStatus(`Cannot load audio for ${lesson.title}. The MP3 URL is missing or blocked: ${lesson.path}`, true);
 });
 
 // — Keyboard shortcuts

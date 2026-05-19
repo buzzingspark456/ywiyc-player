@@ -310,6 +310,22 @@ button {
   text-overflow: ellipsis;
 }
 
+.audio-status {
+  border: 1px solid rgba(233,196,106,0.24);
+  border-radius: 12px;
+  background: rgba(233,196,106,0.09);
+  color: var(--c-text);
+  font-size: 0.84rem;
+  line-height: 1.35;
+  padding: 10px 12px;
+  overflow-wrap: anywhere;
+}
+
+.audio-status--error {
+  border-color: rgba(239,68,68,0.35);
+  background: rgba(239,68,68,0.11);
+}
+
 /* ═══════════════════════════════════════════════════════
    SCRUBBER ROW
 ═══════════════════════════════════════════════════════ */
@@ -765,6 +781,15 @@ button {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.resume-badge {
+  display: inline-flex;
+  margin-top: 5px;
+  color: var(--c-gold);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
 }
 
 /* done badge */
