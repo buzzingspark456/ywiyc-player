@@ -317,6 +317,10 @@ function setLesson(index, autoplay = false) {
 ═══════════════════════════════════════════════════════ */
 function togglePlay() {
   if (audio.paused) {
+    showAudioStatus("");
+    if (audio.error) {
+      audio.load();
+    }
     if (audioCtx?.state === "suspended") audioCtx.resume();
     audio.play().catch(e => {
       console.warn(e);
@@ -618,7 +622,9 @@ audio.addEventListener("error", e => {
   console.error("Audio error:", e);
   timeDuration.textContent = "Error";
   const lesson = lessons[currentIndex];
-  showAudioStatus(`Cannot load audio for ${lesson.title}. The MP3 URL is missing or blocked: ${lesson.path}`, true);
+  if (!audio.paused || audio.readyState === 0) {
+    showAudioStatus(`Cannot load audio for ${lesson.title}. The MP3 URL is missing or blocked: ${lesson.path}`, true);
+  }
 });
 
 // — Keyboard shortcuts
