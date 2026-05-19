@@ -6,11 +6,51 @@ const root = resolve(".");
 const port = Number(process.env.PORT || 8000);
 
 const types = {
+  // HTML & Web
   ".html": "text/html; charset=utf-8",
+  ".htm": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".xml": "application/xml; charset=utf-8",
+  ".svg": "image/svg+xml; charset=utf-8",
+  
+  // Images
   ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".ico": "image/x-icon",
+  ".bmp": "image/bmp",
+  
+  // Audio
   ".mp3": "audio/mpeg",
+  ".wav": "audio/wav",
+  ".m4a": "audio/mp4",
+  ".aac": "audio/aac",
+  ".ogg": "audio/ogg",
+  ".opus": "audio/opus",
+  ".flac": "audio/flac",
+  ".webm": "audio/webm",
+  
+  // Video
+  ".mp4": "video/mp4",
+  ".webm": "video/webm",
+  ".ogg": "video/ogg",
+  ".mov": "video/quicktime",
+  
+  // Documents
+  ".pdf": "application/pdf",
+  ".txt": "text/plain; charset=utf-8",
+  ".md": "text/markdown; charset=utf-8",
+  
+  // Fonts
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".ttf": "font/ttf",
+  ".otf": "font/otf",
 };
 
 function sendFile(req, res, filePath) {
