@@ -31,6 +31,8 @@ async function ensureBucket() {
     public: true,
     allowed_mime_types: ["audio/mpeg"],
     file_size_limit: 104857600,
+    fileSizeLimit: 104857600,
+    allowedMimeTypes: ["audio/mpeg"],
   };
 
   const response = await fetch(`${PROJECT_URL.replace(/\/$/, "")}/storage/v1/bucket`, {
