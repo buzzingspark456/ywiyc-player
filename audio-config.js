@@ -3,4 +3,4 @@
 // window.YWIYC_AUDIO_BASE_URL = "https://your-audio-host.example.com/ywiyc/";
 //
 // Leave blank to use same-site files at /audio/*.mp3.
-window.YWIYC_AUDIO_BASE_URL = "";
+window.YWIYC_AUDIO_BASE_URL = "https://mehgmpyfexbzkmmzxpkk.supabase.co/storage/v1/object/public/ywiyc-audio/";
