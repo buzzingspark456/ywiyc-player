@@ -30,3 +30,16 @@ The files must keep these names:
 - `Your Wish is Your Command - How to Manifest Your Desires Disk 14.mp3`
 
 The player saves the current lesson and exact resume time in the browser using `localStorage`.
+
+## Upload audio to Supabase Storage
+
+Set these environment variables, then run the upload script:
+
+```powershell
+$env:SUPABASE_URL="https://YOUR_PROJECT_REF.supabase.co"
+$env:SUPABASE_SERVICE_ROLE_KEY="YOUR_SERVICE_ROLE_KEY"
+$env:SUPABASE_BUCKET="ywiyc-audio"
+node upload-to-supabase.mjs
+```
+
+After upload, set `audio-config.js` to the public bucket URL printed by the script.
