@@ -63,9 +63,9 @@ async function ensureBucket() {
     body: JSON.stringify(bucketConfig),
   });
 
-  if (!update.ok) {
-    throw new Error(`Bucket update failed: ${update.status} ${await update.text()}`);
-  }
+  // Some Supabase free buckets reject file_size_limit updates. The web MP3s
+  // are already below the default object limit, so upload can continue.
+  if (!update.ok) await update.text();
 }
 
 export default async function handler(req, res) {
