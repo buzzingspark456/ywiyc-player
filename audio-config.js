@@ -1,6 +1,4 @@
-// For online playback, put your authorized MP3 host here.
-// Example:
-// window.YWIYC_AUDIO_BASE_URL = "https://your-audio-host.example.com/ywiyc/";
-//
-// Leave blank to use same-site files at /audio/*.mp3.
+// The browser uses public-read Supabase Storage URLs only.
+// Do not put service role keys or private credentials in frontend code.
+// Create a public bucket named "ywiyc-audio" and upload the MP3 files there.
 window.YWIYC_AUDIO_BASE_URL = "https://mehgmpyfexbzkmmzxpkk.supabase.co/storage/v1/object/public/ywiyc-audio/";
