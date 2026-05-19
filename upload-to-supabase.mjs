@@ -1,8 +1,17 @@
 import { readFile, readdir } from "node:fs/promises";
 import { extname, join } from "node:path";
 
-const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, "");
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = (
+  process.env.SUPABASE_URL ||
+  process.env.storage_SUPABASE_URL ||
+  process.env.NEXT_PUBLIC_storage_ywiycSUPABASE_URL ||
+  "https://mehgmpyfexbzkmmzxpkk.supabase.co"
+).replace(/\/$/, "");
+
+const serviceRoleKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.storage_SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.storage_SUPABASE_SECRET_KEY;
 const bucket = process.env.SUPABASE_BUCKET || "ywiyc-audio";
 const audioDir = process.env.AUDIO_DIR || "audio";
 
