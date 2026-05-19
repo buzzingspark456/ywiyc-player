@@ -59,7 +59,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    if (req.method === "GET") {
+    if (req.method === "GET" && req.query.action !== "sign") {
       res.status(200).json({
         ok: true,
         projectUrl: PROJECT_URL,
@@ -68,14 +68,44 @@ export default async function handler(req, res) {
       return;
     }
 
-    if (req.method !== "PUT") {
-      res.status(405).json({ error: "method_not_allowed" });
-      return;
-    }
-
     const fileName = req.query.name;
     if (!fileName || typeof fileName !== "string" || !fileName.endsWith(".mp3")) {
       res.status(400).json({ error: "missing_or_invalid_name" });
+      return;
+    }
+
+    if (req.method === "GET" && req.query.action === "sign") {
+      await ensureBucket();
+
+      const signUrl = `${PROJECT_URL.replace(/\/$/, "")}/storage/v1/object/upload/sign/${BUCKET}/${encodeURIComponent(fileName)}`;
+      const signed = await fetch(signUrl, {
+        method: "POST",
+        headers: {
+          apikey: SERVICE_KEY,
+          authorization: `Bearer ${SERVICE_KEY}`,
+          "content-type": "application/json",
+          "x-upsert": "true",
+        },
+        body: JSON.stringify({}),
+      });
+
+      if (!signed.ok) {
+        res.status(signed.status).send(await signed.text());
+        return;
+      }
+
+      const data = await signed.json();
+      const relativeUrl = data.url || data.signedURL || data.signedUrl;
+      const uploadUrl = relativeUrl?.startsWith("http")
+        ? relativeUrl
+        : `${PROJECT_URL.replace(/\/$/, "")}/storage/v1${relativeUrl}`;
+
+      res.status(200).json({ ok: true, fileName, uploadUrl });
+      return;
+    }
+
+    if (req.method !== "PUT") {
+      res.status(405).json({ error: "method_not_allowed" });
       return;
     }
 
