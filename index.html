@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0c14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Your Wish Is Your Command</title>
+    <meta name="description" content="Premium audio player for the Kevin Trudeau seminar series — Your Wish Is Your Command.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+
+    <!-- Ambient background layers -->
+    <div class="bg-layer" aria-hidden="true">
+      <div class="bg-orb bg-orb--gold"></div>
+      <div class="bg-orb bg-orb--teal"></div>
+      <div class="bg-orb bg-orb--purple"></div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app" id="app">
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!--  LEFT / TOP: PLAYER                         -->
+      <!-- ═══════════════════════════════════════════ -->
+      <main class="player-panel">
+
+        <!-- Top bar -->
+        <div class="player-topbar">
+          <div class="pill-badge">Kevin Trudeau</div>
+          <button class="icon-btn topbar-btn" id="shortcutsBtn" type="button" aria-label="Keyboard shortcuts" title="Shortcuts (?)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="3"></rect>
+              <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Cover art + visualizer -->
+        <div class="artwork-container" id="artworkContainer">
+          <div class="artwork-frame" id="artworkFrame">
+            <img class="artwork-img" id="coverImg" src="cover.png" alt="Your Wish Is Your Command cover art" draggable="false">
+            <canvas id="visualizer" class="visualizer-canvas"></canvas>
+            <div class="artwork-scrim"></div>
+          </div>
+          <div class="artwork-playing-ring" id="playingRing" aria-hidden="true"></div>
+        </div>
+
+        <!-- Track meta -->
+        <div class="track-meta">
+          <div class="track-meta__label" id="eyebrowLabel">Now Playing</div>
+          <h1 class="track-meta__title" id="currentTitle">Lesson 1</h1>
+          <p class="track-meta__file" id="currentFile">Your Wish Is Your Command Disk 1.mp3</p>
+        </div>
+
+        <!-- Hidden audio element -->
+        <audio id="audio" preload="metadata" crossOrigin="anonymous"></audio>
+
+        <!-- Progress / Scrubber -->
+        <div class="scrubber-row">
+          <span class="time-chip" id="timeElapsed">0:00</span>
+          <div class="range-track" id="scrubberTrack">
+            <div class="range-fill" id="progressFill"></div>
+            <input type="range" id="progressBar" class="range-input" min="0" max="100" value="0" step="0.05" aria-label="Playback progress">
+          </div>
+          <span class="time-chip time-chip--right" id="timeDuration">0:00</span>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+          <!-- Row 1: secondary controls -->
+          <div class="controls__secondary">
+            <button id="shuffleBtn" class="ctrl-btn ctrl-btn--sm" type="button" aria-label="Toggle Shuffle" title="Shuffle (S)">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 3 21 3 21 8"></polyline>
+                <line x1="4" y1="20" x2="21" y2="3"></line>
+                <polyline points="21 16 21 21 16 21"></polyline>
+                <line x1="15" y1="15" x2="21" y2="21"></line>
+                <line x1="4" y1="4" x2="9" y2="9"></line>
+              </svg>
+              <span class="ctrl-btn__dot" id="shuffleDot"></span>
+            </button>
+
+            <button id="repeatBtn" class="ctrl-btn ctrl-btn--sm" type="button" aria-label="Toggle Repeat" title="Repeat (R)">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="17 1 21 5 17 9"></polyline>
+                <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                <polyline points="7 23 3 19 7 15"></polyline>
+                <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+              </svg>
+              <span class="ctrl-btn__dot" id="repeatDot"></span>
+            </button>
+
+            <div class="spacer"></div>
+
+            <!-- Volume -->
+            <button id="muteBtn" class="ctrl-btn ctrl-btn--sm" type="button" aria-label="Mute">
+              <svg class="vol-icon vol-icon--high" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              </svg>
+              <svg class="vol-icon vol-icon--muted hidden" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <line x1="23" y1="9" x2="17" y2="15"></line>
+                <line x1="17" y1="9" x2="23" y2="15"></line>
+              </svg>
+            </button>
+            <div class="range-track range-track--vol">
+              <div class="range-fill" id="volumeFill"></div>
+              <input type="range" id="volumeSlider" class="range-input" min="0" max="1" value="0.8" step="0.02" aria-label="Volume">
+            </div>
+          </div>
+
+          <!-- Row 2: primary playback row -->
+          <div class="controls__primary">
+            <button id="prevBtn" class="ctrl-btn ctrl-btn--md" type="button" aria-label="Previous" title="Previous">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                <polygon points="19,20 9,12 19,4"></polygon>
+                <rect x="5" y="4" width="2.5" height="16" rx="1"></rect>
+              </svg>
+            </button>
+
+            <button id="rewindBtn" class="ctrl-btn ctrl-btn--md ctrl-btn--skip" type="button" aria-label="Rewind 10s" title="−10s">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <polyline points="3 3 3 8 8 8"></polyline>
+                <text x="12" y="15.5" font-size="6.5" font-family="Inter" font-weight="800" fill="currentColor" text-anchor="middle" stroke="none">10</text>
+              </svg>
+            </button>
+
+            <button id="playBtn" class="ctrl-btn ctrl-btn--play" type="button" aria-label="Play">
+              <svg class="play-icon" viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                <polygon points="7,4 20,12 7,20"></polygon>
+              </svg>
+              <svg class="pause-icon hidden" viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                <rect x="5" y="4" width="4" height="16" rx="1.5"></rect>
+                <rect x="15" y="4" width="4" height="16" rx="1.5"></rect>
+              </svg>
+            </button>
+
+            <button id="forwardBtn" class="ctrl-btn ctrl-btn--md ctrl-btn--skip" type="button" aria-label="Forward 10s" title="+10s">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                <polyline points="21 3 21 8 16 8"></polyline>
+                <text x="12" y="15.5" font-size="6.5" font-family="Inter" font-weight="800" fill="currentColor" text-anchor="middle" stroke="none">10</text>
+              </svg>
+            </button>
+
+            <button id="nextBtn" class="ctrl-btn ctrl-btn--md" type="button" aria-label="Next" title="Next">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                <polygon points="5,4 15,12 5,20"></polygon>
+                <rect x="16.5" y="4" width="2.5" height="16" rx="1"></rect>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!--  RIGHT / BOTTOM: PLAYLIST                   -->
+      <!-- ═══════════════════════════════════════════ -->
+      <aside class="playlist-panel">
+
+        <div class="playlist-header">
+          <div>
+            <div class="pill-badge pill-badge--muted">Library</div>
+            <h2 class="playlist-title">Seminar Disks</h2>
+          </div>
+          <span id="count" class="count-badge">14</span>
+        </div>
+
+        <div class="search-wrap">
+          <svg class="search-ico" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input id="search" class="search-input" type="search" placeholder="Search lessons…" autocomplete="off" aria-label="Search lessons">
+          <button id="clearSearchBtn" class="search-clear hidden" type="button" aria-label="Clear search">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div id="lessonList" class="lesson-list"></div>
+
+      </aside>
+    </div>
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div id="shortcutsModal" class="modal hidden" role="dialog" aria-labelledby="modalTitle" aria-modal="true">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 id="modalTitle">Keyboard Shortcuts</h3>
+          <button id="closeModalBtn" class="modal-close" type="button" aria-label="Close">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <ul class="shortcut-list">
+          <li><kbd>Space</kbd><span>Play / Pause</span></li>
+          <li><kbd>←</kbd><span>Skip back 10s</span></li>
+          <li><kbd>→</kbd><span>Skip forward 10s</span></li>
+          <li><kbd>↑ ↓</kbd><span>Volume up / down</span></li>
+          <li><kbd>M</kbd><span>Mute / Unmute</span></li>
+          <li><kbd>S</kbd><span>Toggle Shuffle</span></li>
+          <li><kbd>R</kbd><span>Toggle Repeat</span></li>
+          <li><kbd>/</kbd><span>Focus Search</span></li>
+          <li><kbd>?</kbd><span>This help</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

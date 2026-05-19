@@ -1,0 +1,19 @@
+# Audio files are too large for git — serve locally only
+audio/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+*.swp
+*.swo
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Vercel
+.vercel/
