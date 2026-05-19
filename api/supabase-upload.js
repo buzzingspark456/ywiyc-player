@@ -27,6 +27,12 @@ function readBody(req) {
 }
 
 async function ensureBucket() {
+  const bucketConfig = {
+    public: true,
+    allowed_mime_types: ["audio/mpeg"],
+    file_size_limit: 104857600,
+  };
+
   const response = await fetch(`${PROJECT_URL.replace(/\/$/, "")}/storage/v1/bucket`, {
     method: "POST",
     headers: {
@@ -37,14 +43,27 @@ async function ensureBucket() {
     body: JSON.stringify({
       id: BUCKET,
       name: BUCKET,
-      public: true,
-      allowed_mime_types: ["audio/mpeg"],
-      file_size_limit: 104857600,
+      ...bucketConfig,
     }),
   });
 
-  if (response.ok || response.status === 400 || response.status === 409) return;
-  throw new Error(`Bucket create failed: ${response.status} ${await response.text()}`);
+  if (!response.ok && response.status !== 400 && response.status !== 409) {
+    throw new Error(`Bucket create failed: ${response.status} ${await response.text()}`);
+  }
+
+  const update = await fetch(`${PROJECT_URL.replace(/\/$/, "")}/storage/v1/bucket/${BUCKET}`, {
+    method: "PUT",
+    headers: {
+      apikey: SERVICE_KEY,
+      authorization: `Bearer ${SERVICE_KEY}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(bucketConfig),
+  });
+
+  if (!update.ok) {
+    throw new Error(`Bucket update failed: ${update.status} ${await update.text()}`);
+  }
 }
 
 export default async function handler(req, res) {
