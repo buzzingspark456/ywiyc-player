@@ -44,10 +44,16 @@
           </div>
         </div>
 
-        <!-- Cover art + visualizer -->
+        <!-- Moving CD artwork + visualizer -->
         <div class="artwork-container" id="artworkContainer">
           <div class="artwork-frame" id="artworkFrame">
-            <img class="artwork-img" id="coverImg" src="cover.png" alt="Your Wish Is Your Command cover art" draggable="false">
+            <div class="cd-stage" aria-hidden="true">
+              <div class="cd-disc" id="cdDisc">
+                <div class="cd-surface"></div>
+                <div class="cd-hole"></div>
+                <div class="cd-label" id="cdLabel">1</div>
+              </div>
+            </div>
             <canvas id="visualizer" class="visualizer-canvas"></canvas>
             <div class="artwork-scrim"></div>
           </div>

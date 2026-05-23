@@ -34,7 +34,7 @@ const lessons = [
   { number: 14, file: "Your Wish is Your Command - How to Manifest Your Desires Disk 14.mp3" },
 ].map(l => ({
   ...l,
-  title: `Lesson ${l.number}`,
+  title: `Your Wish Is Your Command Disk ${l.number}`,
   path:  buildAudioPath(l.file),
 }));
 
@@ -48,6 +48,7 @@ const currentTitle   = document.getElementById("currentTitle");
 const currentFile    = document.getElementById("currentFile");
 const resumeInfo     = document.getElementById("resumeInfo");
 const audioStatus    = document.getElementById("audioStatus");
+const cdLabel        = document.getElementById("cdLabel");
 const artworkFrame   = document.getElementById("artworkFrame");
 const playingRing    = document.getElementById("playingRing");
 
@@ -367,6 +368,7 @@ function setLesson(index, autoplay = false) {
   audio.src = lesson.path;
   currentTitle.textContent = lesson.title;
   currentFile.textContent  = lesson.file;
+  cdLabel.textContent = String(lesson.number);
   localStorage.setItem("ywiYC.currentIndex", String(currentIndex));
   showAudioStatus("");
   updateResumeInfo();
