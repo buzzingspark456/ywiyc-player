@@ -1,5 +1,8 @@
 # Audio files are too large for git — serve locally only
 audio/
+audio-web/
+package.json
+package-lock.json
 
 # OS junk
 .DS_Store

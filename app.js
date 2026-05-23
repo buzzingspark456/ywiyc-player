@@ -92,11 +92,16 @@ const canvasCtx      = canvas.getContext("2d");
    STATE
 ═══════════════════════════════════════════════════════ */
 let currentIndex   = Number(localStorage.getItem("ywiYC.currentIndex") || 0);
+if (!Number.isInteger(currentIndex) || currentIndex < 0 || currentIndex >= lessons.length) {
+  currentIndex = 0;
+}
 let isShuffle      = localStorage.getItem("ywiYC.isShuffle") === "true";
 let isRepeat       = localStorage.getItem("ywiYC.isRepeat")  === "true";
 let savedVolume    = Number(localStorage.getItem("ywiYC.volume") ?? 0.8);
 let isMuted        = localStorage.getItem("ywiYC.isMuted")  === "true";
 let filteredLessons = [...lessons];
+let currentLessonLoaded = false;
+let restoreTime = 0;
 
 // Web Audio
 let audioCtx       = null;
@@ -131,8 +136,13 @@ function storageKey(name, lessonNumber = lessons[currentIndex].number) {
   return `ywiYC.${name}.${lessonNumber}`;
 }
 
-function saveCurrentPosition() {
+function getSavedTime(lessonNumber = lessons[currentIndex].number) {
+  return Number(localStorage.getItem(storageKey("time", lessonNumber)) || 0);
+}
+
+function saveCurrentPosition(force = false) {
   if (!lessons[currentIndex] || !isFinite(audio.currentTime)) return;
+  if (!force && (!currentLessonLoaded || !audio.currentSrc || audio.currentTime <= 0)) return;
   const num = lessons[currentIndex].number;
   localStorage.setItem(storageKey("time", num), String(Math.floor(audio.currentTime)));
   if (isFinite(audio.duration) && audio.duration > 0) {
@@ -287,6 +297,8 @@ function setLesson(index, autoplay = false) {
   saveCurrentPosition();
   currentIndex = ((index % lessons.length) + lessons.length) % lessons.length;
   const lesson = lessons[currentIndex];
+  restoreTime = getSavedTime(lesson.number);
+  currentLessonLoaded = false;
 
   audio.src = lesson.path;
   currentTitle.textContent = lesson.title;
@@ -298,12 +310,13 @@ function setLesson(index, autoplay = false) {
   progressBar.value = 0;
   progressFill.style.width = "0%";
   setThumbPos(scrubberTrack, 0);
-  timeElapsed.textContent  = "0:00";
+  timeElapsed.textContent  = restoreTime > 3 ? fmt(restoreTime) : "0:00";
   timeDuration.textContent = "0:00";
 
   renderList();
 
   if (autoplay) {
+    audio.load();
     if (audioCtx?.state === "suspended") audioCtx.resume();
     audio.play().catch(err => {
       console.warn("Playback blocked:", err);
@@ -318,7 +331,7 @@ function setLesson(index, autoplay = false) {
 function togglePlay() {
   if (audio.paused) {
     showAudioStatus("");
-    if (audio.error) {
+    if (audio.error || (restoreTime > 3 && audio.readyState === 0)) {
       audio.load();
     }
     if (audioCtx?.state === "suspended") audioCtx.resume();
@@ -560,14 +573,16 @@ audio.addEventListener("pause", syncPlayState);
 
 audio.addEventListener("loadedmetadata", () => {
   showAudioStatus("");
+  currentLessonLoaded = true;
   timeDuration.textContent = fmt(audio.duration);
   const num = lessons[currentIndex].number;
   localStorage.setItem(storageKey("duration", num), String(Math.floor(audio.duration)));
 
   // Restore saved position — resume exactly where left off
-  const saved = Number(localStorage.getItem(storageKey("time", num)) || 0);
+  const saved = getSavedTime(num);
   if (saved > 3 && saved < audio.duration - 5) {
     audio.currentTime = saved;
+    updateScrubber();
     // Show resume hint briefly
     document.getElementById("eyebrowLabel").textContent = `Resuming from ${fmt(saved)}`;
     setTimeout(() => {
@@ -601,12 +616,22 @@ audio.addEventListener("timeupdate", () => {
 
 // Always save on pause/unload so position is never lost
 audio.addEventListener("pause", () => {
-  saveCurrentPosition();
+  saveCurrentPosition(true);
   renderList();
 });
 
 window.addEventListener("beforeunload", () => {
-  saveCurrentPosition();
+  saveCurrentPosition(true);
+});
+
+window.addEventListener("pagehide", () => {
+  saveCurrentPosition(true);
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    saveCurrentPosition(true);
+  }
 });
 
 audio.addEventListener("ended", () => {
