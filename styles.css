@@ -192,6 +192,32 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+}
+
+.topbar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.text-btn {
+  min-height: 36px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  color: var(--c-text);
+  font-size: 0.84rem;
+  font-weight: 700;
+  padding: 0 12px;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
+}
+
+.text-btn:hover,
+.text-btn:focus-visible {
+  border-color: rgba(233,196,106,0.35);
+  background: rgba(233,196,106,0.10);
+  outline: none;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -308,6 +334,13 @@ button {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.track-meta__resume {
+  color: var(--c-muted2);
+  font-size: 0.84rem;
+  line-height: 1.35;
+  margin-top: 8px;
 }
 
 .audio-status {
@@ -786,10 +819,15 @@ button {
 .resume-badge {
   display: inline-flex;
   margin-top: 5px;
+  margin-right: 8px;
   color: var(--c-gold);
   font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 700;
+}
+
+.resume-badge--muted {
+  color: var(--c-muted2);
 }
 
 /* done badge */
@@ -1011,6 +1049,15 @@ mark {
   .ctrl-btn--sm {
     width: 40px;
     height: 40px;
+  }
+
+  .player-topbar {
+    align-items: flex-start;
+  }
+
+  .topbar-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   /* Volume: hide slider on very small, keep mute btn */

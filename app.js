@@ -46,6 +46,7 @@ const audio          = document.getElementById("audio");
 // Player UI
 const currentTitle   = document.getElementById("currentTitle");
 const currentFile    = document.getElementById("currentFile");
+const resumeInfo     = document.getElementById("resumeInfo");
 const audioStatus    = document.getElementById("audioStatus");
 const artworkFrame   = document.getElementById("artworkFrame");
 const playingRing    = document.getElementById("playingRing");
@@ -59,6 +60,7 @@ const timeDuration   = document.getElementById("timeDuration");
 
 // Controls
 const playBtn        = document.getElementById("playBtn");
+const clearProgressBtn = document.getElementById("clearProgressBtn");
 const prevBtn        = document.getElementById("prevBtn");
 const nextBtn        = document.getElementById("nextBtn");
 const rewindBtn      = document.getElementById("rewindBtn");
@@ -102,6 +104,7 @@ let isMuted        = localStorage.getItem("ywiYC.isMuted")  === "true";
 let filteredLessons = [...lessons];
 let currentLessonLoaded = false;
 let restoreTime = 0;
+let clearingProgress = false;
 
 // Web Audio
 let audioCtx       = null;
@@ -140,11 +143,29 @@ function getSavedTime(lessonNumber = lessons[currentIndex].number) {
   return Number(localStorage.getItem(storageKey("time", lessonNumber)) || 0);
 }
 
+function getLastListened(lessonNumber = lessons[currentIndex].number) {
+  return Number(localStorage.getItem(storageKey("lastListened", lessonNumber)) || 0);
+}
+
+function formatLastListened(timestamp) {
+  if (!timestamp) return "";
+  const then = new Date(timestamp);
+  return then.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 function saveCurrentPosition(force = false) {
+  if (clearingProgress) return;
   if (!lessons[currentIndex] || !isFinite(audio.currentTime)) return;
-  if (!force && (!currentLessonLoaded || !audio.currentSrc || audio.currentTime <= 0)) return;
+  if (!audio.currentSrc || audio.currentTime <= 0) return;
+  if (!force && !currentLessonLoaded) return;
   const num = lessons[currentIndex].number;
   localStorage.setItem(storageKey("time", num), String(Math.floor(audio.currentTime)));
+  localStorage.setItem(storageKey("lastListened", num), String(Date.now()));
   if (isFinite(audio.duration) && audio.duration > 0) {
     localStorage.setItem(storageKey("duration", num), String(Math.floor(audio.duration)));
   }
@@ -155,6 +176,49 @@ function showAudioStatus(message, isError = false) {
   audioStatus.textContent = message;
   audioStatus.classList.toggle("hidden", !message);
   audioStatus.classList.toggle("audio-status--error", isError);
+}
+
+function updateResumeInfo() {
+  const lesson = lessons[currentIndex];
+  const saved = getSavedTime(lesson.number);
+  const lastListened = getLastListened(lesson.number);
+  const lastText = formatLastListened(lastListened);
+
+  if (saved > 3) {
+    resumeInfo.textContent = `Saved at ${fmt(saved)}${lastText ? ` - last listened ${lastText}` : ""}.`;
+  } else {
+    resumeInfo.textContent = "No saved position for this lesson yet.";
+  }
+}
+
+function clearAllProgress() {
+  if (!confirm("Clear all saved listening progress?")) return;
+
+  clearingProgress = true;
+  audio.pause();
+
+  lessons.forEach((lesson) => {
+    localStorage.removeItem(storageKey("time", lesson.number));
+    localStorage.removeItem(storageKey("duration", lesson.number));
+    localStorage.removeItem(storageKey("lastListened", lesson.number));
+  });
+
+  restoreTime = 0;
+  try {
+    audio.currentTime = 0;
+  } catch {
+    // Some browsers only allow seeking after metadata is ready.
+  }
+  progressBar.value = 0;
+  progressFill.style.width = "0%";
+  setThumbPos(scrubberTrack, 0);
+  timeElapsed.textContent = "0:00";
+  updateResumeInfo();
+  renderList();
+  showAudioStatus("Progress cleared.", false);
+  window.setTimeout(() => {
+    clearingProgress = false;
+  }, 250);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -305,6 +369,7 @@ function setLesson(index, autoplay = false) {
   currentFile.textContent  = lesson.file;
   localStorage.setItem("ywiYC.currentIndex", String(currentIndex));
   showAudioStatus("");
+  updateResumeInfo();
 
   // Reset scrubber
   progressBar.value = 0;
@@ -331,7 +396,8 @@ function setLesson(index, autoplay = false) {
 function togglePlay() {
   if (audio.paused) {
     showAudioStatus("");
-    if (audio.error || (restoreTime > 3 && audio.readyState === 0)) {
+    restoreTime = getSavedTime();
+    if (audio.error || audio.readyState === 0) {
       audio.load();
     }
     if (audioCtx?.state === "suspended") audioCtx.resume();
@@ -449,6 +515,11 @@ function renderList() {
       ? `<span class="resume-badge">Saved ${fmt(savedTime)}</span>`
       : "";
 
+    const lastListened = getLastListened(lesson.number);
+    const lastBadge = lastListened
+      ? `<span class="resume-badge resume-badge--muted">Last ${formatLastListened(lastListened)}</span>`
+      : "";
+
     const btn = document.createElement("button");
     btn.type      = "button";
     btn.className = `lesson${isCurrent ? " active" : ""}`;
@@ -461,6 +532,7 @@ function renderList() {
         <span class="lesson-meta__title">${highlight(lesson.title, query)}</span>
         <span class="lesson-meta__file">${highlight(lesson.file, query)}</span>
         ${resumeBadge}
+        ${lastBadge}
       </span>
       ${doneBadge}
       <div class="lesson-progress-bar"></div>
@@ -497,6 +569,7 @@ function setupMediaSession() {
 
 // — Play/Pause
 playBtn.addEventListener("click",   togglePlay);
+clearProgressBtn.addEventListener("click", clearAllProgress);
 prevBtn.addEventListener("click",   playPrev);
 nextBtn.addEventListener("click",   playNext);
 rewindBtn.addEventListener("click", () => skip(-10));
@@ -590,6 +663,7 @@ audio.addEventListener("loadedmetadata", () => {
     }, 3000);
   }
 
+  updateResumeInfo();
   setupMediaSession();
 });
 
@@ -611,12 +685,14 @@ audio.addEventListener("timeupdate", () => {
     if (activeCard) {
       activeCard.style.setProperty("--prog", `${pct}%`);
     }
+    updateResumeInfo();
   }
 });
 
 // Always save on pause/unload so position is never lost
 audio.addEventListener("pause", () => {
   saveCurrentPosition(true);
+  updateResumeInfo();
   renderList();
 });
 

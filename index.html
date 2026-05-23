@@ -33,12 +33,15 @@
         <!-- Top bar -->
         <div class="player-topbar">
           <div class="pill-badge">Kevin Trudeau</div>
-          <button class="icon-btn topbar-btn" id="shortcutsBtn" type="button" aria-label="Keyboard shortcuts" title="Shortcuts (?)">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="4" width="20" height="16" rx="3"></rect>
-              <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"></path>
-            </svg>
-          </button>
+          <div class="topbar-actions">
+            <button class="text-btn" id="clearProgressBtn" type="button">Clear progress</button>
+            <button class="icon-btn topbar-btn" id="shortcutsBtn" type="button" aria-label="Keyboard shortcuts" title="Shortcuts (?)">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="3"></rect>
+                <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"></path>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <!-- Cover art + visualizer -->
@@ -56,6 +59,7 @@
           <div class="track-meta__label" id="eyebrowLabel">Now Playing</div>
           <h1 class="track-meta__title" id="currentTitle">Lesson 1</h1>
           <p class="track-meta__file" id="currentFile">Your Wish Is Your Command Disk 1.mp3</p>
+          <p class="track-meta__resume" id="resumeInfo">No saved position yet.</p>
         </div>
 
         <!-- Hidden audio element -->
