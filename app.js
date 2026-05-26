@@ -51,6 +51,10 @@ const audioStatus    = document.getElementById("audioStatus");
 const cdLabel        = document.getElementById("cdLabel");
 const artworkFrame   = document.getElementById("artworkFrame");
 const playingRing    = document.getElementById("playingRing");
+const notesTitle     = document.getElementById("notesTitle");
+const listenCountEl  = document.getElementById("listenCount");
+const lessonNotes    = document.getElementById("lessonNotes");
+const notesSaved     = document.getElementById("notesSaved");
 
 // Scrubber
 const progressBar    = document.getElementById("progressBar");
@@ -106,6 +110,8 @@ let filteredLessons = [...lessons];
 let currentLessonLoaded = false;
 let restoreTime = 0;
 let clearingProgress = false;
+let countedThisPlay = false;
+let notesSaveTimer = null;
 
 // Web Audio
 let audioCtx       = null;
@@ -148,6 +154,23 @@ function getLastListened(lessonNumber = lessons[currentIndex].number) {
   return Number(localStorage.getItem(storageKey("lastListened", lessonNumber)) || 0);
 }
 
+function getListenCount(lessonNumber = lessons[currentIndex].number) {
+  return Number(localStorage.getItem(storageKey("listens", lessonNumber)) || 0);
+}
+
+function getLessonNotes(lessonNumber = lessons[currentIndex].number) {
+  return localStorage.getItem(storageKey("notes", lessonNumber)) || "";
+}
+
+function getNotesUpdated(lessonNumber = lessons[currentIndex].number) {
+  return Number(localStorage.getItem(storageKey("notesUpdated", lessonNumber)) || 0);
+}
+
+function saveLessonNotes(value, lessonNumber = lessons[currentIndex].number) {
+  localStorage.setItem(storageKey("notes", lessonNumber), value);
+  localStorage.setItem(storageKey("notesUpdated", lessonNumber), String(Date.now()));
+}
+
 function formatLastListened(timestamp) {
   if (!timestamp) return "";
   const then = new Date(timestamp);
@@ -157,6 +180,10 @@ function formatLastListened(timestamp) {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function formatListenCount(count) {
+  return `${count} ${count === 1 ? "listen" : "listens"}`;
 }
 
 function saveCurrentPosition(force = false) {
@@ -192,6 +219,37 @@ function updateResumeInfo() {
   }
 }
 
+function updateLessonExtras() {
+  const lesson = lessons[currentIndex];
+  const listens = getListenCount(lesson.number);
+  const notesUpdated = getNotesUpdated(lesson.number);
+
+  notesTitle.textContent = `Disc ${lesson.number} notes`;
+  listenCountEl.textContent = formatListenCount(listens);
+  lessonNotes.value = getLessonNotes(lesson.number);
+  notesSaved.textContent = notesUpdated
+    ? `Notes saved ${formatLastListened(notesUpdated)}.`
+    : "Notes save automatically.";
+}
+
+function markLessonListened() {
+  const lesson = lessons[currentIndex];
+  const nextCount = getListenCount(lesson.number) + 1;
+  localStorage.setItem(storageKey("listens", lesson.number), String(nextCount));
+  localStorage.setItem(storageKey("lastCompleted", lesson.number), String(Date.now()));
+  countedThisPlay = true;
+  updateLessonExtras();
+  renderList();
+}
+
+function maybeCountListen() {
+  if (countedThisPlay || !audio.duration || !isFinite(audio.duration)) return;
+  const almostFinished = audio.currentTime >= Math.max(30, audio.duration * 0.9);
+  if (almostFinished) {
+    markLessonListened();
+  }
+}
+
 function clearAllProgress() {
   if (!confirm("Clear all saved listening progress?")) return;
 
@@ -202,6 +260,8 @@ function clearAllProgress() {
     localStorage.removeItem(storageKey("time", lesson.number));
     localStorage.removeItem(storageKey("duration", lesson.number));
     localStorage.removeItem(storageKey("lastListened", lesson.number));
+    localStorage.removeItem(storageKey("listens", lesson.number));
+    localStorage.removeItem(storageKey("lastCompleted", lesson.number));
   });
 
   restoreTime = 0;
@@ -215,6 +275,7 @@ function clearAllProgress() {
   setThumbPos(scrubberTrack, 0);
   timeElapsed.textContent = "0:00";
   updateResumeInfo();
+  updateLessonExtras();
   renderList();
   showAudioStatus("Progress cleared.", false);
   window.setTimeout(() => {
@@ -364,6 +425,7 @@ function setLesson(index, autoplay = false) {
   const lesson = lessons[currentIndex];
   restoreTime = getSavedTime(lesson.number);
   currentLessonLoaded = false;
+  countedThisPlay = false;
 
   audio.src = lesson.path;
   currentTitle.textContent = lesson.title;
@@ -372,6 +434,7 @@ function setLesson(index, autoplay = false) {
   localStorage.setItem("ywiYC.currentIndex", String(currentIndex));
   showAudioStatus("");
   updateResumeInfo();
+  updateLessonExtras();
 
   // Reset scrubber
   progressBar.value = 0;
@@ -522,6 +585,15 @@ function renderList() {
       ? `<span class="resume-badge resume-badge--muted">Last ${formatLastListened(lastListened)}</span>`
       : "";
 
+    const listenCount = getListenCount(lesson.number);
+    const listenBadge = listenCount > 0
+      ? `<span class="resume-badge resume-badge--listen">${formatListenCount(listenCount)}</span>`
+      : "";
+
+    const notesBadge = getLessonNotes(lesson.number).trim()
+      ? `<span class="resume-badge resume-badge--note">Notes</span>`
+      : "";
+
     const btn = document.createElement("button");
     btn.type      = "button";
     btn.className = `lesson${isCurrent ? " active" : ""}`;
@@ -535,6 +607,8 @@ function renderList() {
         <span class="lesson-meta__file">${highlight(lesson.file, query)}</span>
         ${resumeBadge}
         ${lastBadge}
+        ${listenBadge}
+        ${notesBadge}
       </span>
       ${doneBadge}
       <div class="lesson-progress-bar"></div>
@@ -632,6 +706,16 @@ clearSearchBtn.addEventListener("click", () => {
 });
 
 // — Modal
+lessonNotes.addEventListener("input", () => {
+  saveLessonNotes(lessonNotes.value);
+  notesSaved.textContent = "Saving...";
+  window.clearTimeout(notesSaveTimer);
+  notesSaveTimer = window.setTimeout(() => {
+    notesSaved.textContent = "Saved just now.";
+    renderList();
+  }, 350);
+});
+
 shortcutsBtn.addEventListener("click", toggleModal);
 closeModalBtn.addEventListener("click", toggleModal);
 shortcutsModal.addEventListener("click", e => {
@@ -666,6 +750,7 @@ audio.addEventListener("loadedmetadata", () => {
   }
 
   updateResumeInfo();
+  updateLessonExtras();
   setupMediaSession();
 });
 
@@ -689,12 +774,15 @@ audio.addEventListener("timeupdate", () => {
     }
     updateResumeInfo();
   }
+
+  maybeCountListen();
 });
 
 // Always save on pause/unload so position is never lost
 audio.addEventListener("pause", () => {
   saveCurrentPosition(true);
   updateResumeInfo();
+  updateLessonExtras();
   renderList();
 });
 
@@ -713,6 +801,9 @@ document.addEventListener("visibilitychange", () => {
 });
 
 audio.addEventListener("ended", () => {
+  if (!countedThisPlay) {
+    markLessonListened();
+  }
   if (isRepeat) {
     audio.currentTime = 0;
     audio.play();
@@ -732,9 +823,9 @@ audio.addEventListener("error", e => {
 
 // — Keyboard shortcuts
 document.addEventListener("keydown", e => {
-  // Don't intercept when typing in search
-  if (document.activeElement === search) {
-    if (e.key === "Escape") search.blur();
+  const typingInField = document.activeElement === search || document.activeElement === lessonNotes;
+  if (typingInField) {
+    if (e.key === "Escape") document.activeElement.blur();
     return;
   }
 

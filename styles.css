@@ -384,7 +384,7 @@ button {
   font-size: clamp(1.5rem, 4vw, 2rem);
   font-weight: 800;
   line-height: 1.15;
-  letter-spacing: -0.025em;
+  letter-spacing: 0;
   color: var(--c-text);
   white-space: nowrap;
   overflow: hidden;
@@ -648,6 +648,83 @@ button {
   box-shadow: 0 4px 16px rgba(233,196,106,0.35);
 }
 
+.notes-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(42,157,143,0.08), transparent 38%),
+    rgba(255,255,255,0.035);
+}
+
+.notes-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.notes-kicker {
+  color: var(--c-gold);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.notes-head h2 {
+  color: var(--c-text);
+  font-size: 1rem;
+  line-height: 1.25;
+  margin-top: 3px;
+}
+
+.listen-count {
+  flex-shrink: 0;
+  border: 1px solid rgba(42,157,143,0.24);
+  border-radius: 999px;
+  background: var(--c-teal-tint);
+  color: #98efe4;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 6px 10px;
+}
+
+.lesson-notes {
+  width: 100%;
+  min-height: 132px;
+  resize: vertical;
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+  background: rgba(0,0,0,0.28);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  padding: 12px 13px;
+  outline: none;
+  transition: border-color var(--t-med), box-shadow var(--t-med), background var(--t-med);
+}
+
+.lesson-notes::placeholder {
+  color: var(--c-muted);
+}
+
+.lesson-notes:focus {
+  border-color: rgba(42,157,143,0.46);
+  background: rgba(0,0,0,0.38);
+  box-shadow: 0 0 0 3px rgba(42,157,143,0.10);
+}
+
+.notes-saved {
+  color: var(--c-muted2);
+  font-size: 0.78rem;
+}
+
 /* topbar btn */
 .topbar-btn {
   width: 36px;
@@ -669,7 +746,7 @@ button {
 .playlist-title {
   font-size: 1.3rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .count-badge {
@@ -892,6 +969,18 @@ button {
 
 .resume-badge--muted {
   color: var(--c-muted2);
+}
+
+.resume-badge--listen {
+  color: #98efe4;
+}
+
+.resume-badge--note {
+  color: var(--c-text);
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 999px;
+  padding: 2px 7px;
 }
 
 /* done badge */
