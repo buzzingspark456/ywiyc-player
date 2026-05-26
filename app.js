@@ -547,7 +547,9 @@ function renderList() {
   filteredLessons = lessons.filter(l =>
     `${l.title} ${l.file}`.toLowerCase().includes(query)
   );
-  countEl.textContent = String(filteredLessons.length);
+  if (countEl) {
+    countEl.textContent = String(filteredLessons.length);
+  }
   lessonList.innerHTML = "";
 
   if (!filteredLessons.length) {
