@@ -47,6 +47,7 @@ const audio          = document.getElementById("audio");
 const currentTitle   = document.getElementById("currentTitle");
 const currentFile    = document.getElementById("currentFile");
 const resumeInfo     = document.getElementById("resumeInfo");
+const eyebrowLabel   = document.getElementById("eyebrowLabel");
 const audioStatus    = document.getElementById("audioStatus");
 const cdLabel        = document.getElementById("cdLabel");
 const artworkFrame   = document.getElementById("artworkFrame");
@@ -430,6 +431,7 @@ function setLesson(index, autoplay = false) {
   audio.src = lesson.path;
   currentTitle.textContent = lesson.title;
   currentFile.textContent  = lesson.file;
+  eyebrowLabel.textContent = `Disc ${lesson.number}`;
   cdLabel.textContent = String(lesson.number);
   localStorage.setItem("ywiYC.currentIndex", String(currentIndex));
   showAudioStatus("");
@@ -604,7 +606,7 @@ function renderList() {
       <span class="lesson-num">${lesson.number}</span>
       <span class="lesson-meta">
         <span class="lesson-meta__title">${highlight(lesson.title, query)}</span>
-        <span class="lesson-meta__file">${highlight(lesson.file, query)}</span>
+        <span class="lesson-meta__file">Disc ${lesson.number}</span>
         ${resumeBadge}
         ${lastBadge}
         ${listenBadge}
@@ -743,9 +745,9 @@ audio.addEventListener("loadedmetadata", () => {
     audio.currentTime = saved;
     updateScrubber();
     // Show resume hint briefly
-    document.getElementById("eyebrowLabel").textContent = `Resuming from ${fmt(saved)}`;
+    eyebrowLabel.textContent = `Resume ${fmt(saved)}`;
     setTimeout(() => {
-      document.getElementById("eyebrowLabel").textContent = "Now Playing";
+      eyebrowLabel.textContent = `Disc ${lessons[currentIndex].number}`;
     }, 3000);
   }
 

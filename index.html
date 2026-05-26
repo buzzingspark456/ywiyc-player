@@ -30,19 +30,18 @@
       <!-- ═══════════════════════════════════════════ -->
       <main class="player-panel">
 
-        <!-- Top bar -->
-        <div class="player-topbar">
-          <div class="pill-badge">Kevin Trudeau</div>
-          <div class="topbar-actions">
-            <button class="text-btn" id="clearProgressBtn" type="button">Clear progress</button>
-            <button class="icon-btn topbar-btn" id="shortcutsBtn" type="button" aria-label="Keyboard shortcuts" title="Shortcuts (?)">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="4" width="20" height="16" rx="3"></rect>
-                <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"></path>
-              </svg>
-            </button>
-          </div>
-        </div>
+        <button class="icon-btn topbar-btn hidden" id="shortcutsBtn" type="button" aria-label="Keyboard shortcuts" title="Shortcuts (?)">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="3"></rect>
+            <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"></path>
+          </svg>
+        </button>
+
+        <section class="hero-copy" aria-label="Audio library">
+          <p class="hero-kicker">Audio library</p>
+          <h1>Your Wish Is Your Command</h1>
+          <p>Discs 1-14, sorted in listening order.</p>
+        </section>
 
         <!-- Moving CD artwork + visualizer -->
         <div class="artwork-container" id="artworkContainer">
@@ -192,11 +191,8 @@
       <aside class="playlist-panel">
 
         <div class="playlist-header">
-          <div>
-            <div class="pill-badge pill-badge--muted">Library</div>
-            <h2 class="playlist-title">Seminar Disks</h2>
-          </div>
-          <span id="count" class="count-badge">14</span>
+          <h2 class="playlist-title">Playlist</h2>
+          <button class="text-btn" id="clearProgressBtn" type="button">Clear progress</button>
         </div>
 
         <div class="search-wrap">
